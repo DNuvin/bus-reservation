@@ -1,0 +1,229 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Bus Reservation API",
+    "description": "API for managing bus reservations, seat availability, and reservation updates",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080/bus-reservation",
+      "description": "Local development server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Reservation",
+      "description": "Endpoints for booking and updating reservations"
+    },
+    {
+      "name": "Seats",
+      "description": "Endpoints for managing seats"
+    }
+  ],
+  "paths": {
+    "/api/check-availability": {
+      "get": {
+        "tags": ["Seats"],
+        "summary": "Check seat availability",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "date" },
+            "description": "Travel date (YYYY-MM-DD)"
+          },
+          {
+            "name": "origin",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Departure location"
+          },
+          {
+            "name": "destination",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Arrival location"
+          },
+          {
+            "name": "passengerCount",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1 },
+            "description": "Number of passengers"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Available seats and pricing",
+            "content": {
+              "application/json": {
+                "example": {
+                  "available": ["S1","S2","S3"],
+                  "priceEach": 50,
+                  "totalPriceFinal": 150
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters",
+            "content": {
+              "application/json": { "example": { "error": "Invalid request" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/reserve": {
+      "post": {
+        "tags": ["Reservation"],
+        "summary": "Reserve seats",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "date": { "type": "string", "format": "date" },
+                  "origin": { "type": "string" },
+                  "destination": { "type": "string" },
+                  "seatIds": { "type": "string", "description": "Comma-separated seat IDs" }
+                },
+                "required": ["date", "origin", "destination", "seatIds"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reservation successful",
+            "content": {
+              "application/json": {
+                "example": {
+                  "reservationId": "R-1695974640000",
+                  "assignedSeats": ["S1","S2"],
+                  "departure": "A",
+                  "arrival": "B",
+                  "totalPriceFinal": 100
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Seats already booked or invalid request",
+            "content": {
+              "application/json": {
+                "example": { "error": "Seat S1 already booked" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "example": { "error": "Reservation failed due to server error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/seats": {
+      "get": {
+        "tags": ["Seats"],
+        "summary": "Get all seats",
+        "responses": {
+          "200": {
+            "description": "List of seats",
+            "content": {
+              "application/json": {
+                "example": [
+                  { "seatId": "S1", "reserved": false },
+                  { "seatId": "S2", "reserved": true }
+                ]
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": { "example": { "error": "Failed to fetch seats" } }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Seats"],
+        "summary": "Add a new seat",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "seatId": { "type": "string" }
+                },
+                "required": ["seatId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Seat added successfully",
+            "content": {
+              "application/json": { "example": { "message": "Seat added" } }
+            }
+          },
+          "400": {
+            "description": "Invalid seat ID",
+            "content": {
+              "application/json": { "example": { "error": "Seat ID missing or invalid" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/reservation/update": {
+      "post": {
+        "tags": ["Reservation"],
+        "summary": "Update reservation status",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string" },
+                  "status": { "type": "string", "enum": ["HELD", "COMPLETED", "CANCELLED"] }
+                },
+                "required": ["id", "status"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reservation status updated",
+            "content": {
+              "application/json": { "example": { "message": "Reservation updated" } }
+            }
+          },
+          "400": {
+            "description": "Invalid reservation ID or status",
+            "content": {
+              "application/json": { "example": { "error": "Invalid request" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -21,7 +21,7 @@
     <dependency>
       <groupId>jakarta.servlet</groupId>
       <artifactId>jakarta.servlet-api</artifactId>
-      <version>5.0.0</version>
+      <version>6.1.0</version>
       <scope>provided</scope>
     </dependency>
 
@@ -46,7 +46,7 @@
       <version>2.4.240</version>
     </dependency>
 
-    <!-- SLF4J API -->
+    <!-- Logging -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
@@ -60,19 +60,10 @@
       <version>1.4.11</version>
     </dependency>
 
-    <dependency>
-      <groupId>io.swagger.core.v3</groupId>
-      <artifactId>swagger-jaxrs2</artifactId>
-      <version>2.2.11</version>
-    </dependency>
+    <!-- Swagger / OpenAPI -->
     <dependency>
       <groupId>io.swagger.core.v3</groupId>
       <artifactId>swagger-core</artifactId>
-      <version>2.2.11</version>
-    </dependency>
-    <dependency>
-      <groupId>io.swagger.core.v3</groupId>
-      <artifactId>swagger-integration</artifactId>
       <version>2.2.11</version>
     </dependency>
     <dependency>
@@ -81,7 +72,7 @@
       <version>2.2.11</version>
     </dependency>
 
-    <!-- JUnit 5 -->
+    <!-- JUnit 5 for tests -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
@@ -89,13 +80,25 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- Mockito -->
+    <!-- Mockito for tests -->
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <version>5.5.0</version>
       <scope>test</scope>
     </dependency>
+    <!-- Swagger UI WebJar -->
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>swagger-ui</artifactId>
+      <version>5.9.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.swagger.core.v3</groupId>
+      <artifactId>swagger-integration</artifactId>
+      <version>2.2.11</version>
+    </dependency>
+
   </dependencies>
 
   <build>

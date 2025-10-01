@@ -1,0 +1,170 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Bus Reservation API",
+    "version": "1.0",
+    "description": "API for managing bus reservations including seat availability, booking, updates, and seat management."
+  },
+  "servers": [
+    {
+      "url": "/bus-reservation",
+      "description": "Local development server"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "SeatRequest": {
+        "type": "object",
+        "properties": {
+          "seatId": {
+            "type": "string",
+            "enum": [
+              "1A","1B","1C","1D","2A","2B","2C","2D","3A","3B","3C","3D",
+              "4A","4B","4C","4D","5A","5B","5C","5D","6A","6B","6C","6D",
+              "7A","7B","7C","7D","8A","8B","8C","8D","9A","9B","9C","9D",
+              "10A","10B","10C","10D"
+            ]
+          }
+        },
+        "required": ["seatId"]
+      },
+      "ReservationResponse": {
+        "type": "object",
+        "properties": {
+          "reservationId": {"type": "string"},
+          "assignedSeats": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "departure": {"type": "string"},
+          "arrival": {"type": "string"},
+          "totalPriceFinal": {"type": "integer"},
+          "error": {"type": "string"}
+        }
+      },
+      "AvailabilityResponse": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "priceEach": {"type": "integer"},
+          "totalPriceFinal": {"type": "integer"},
+          "error": {"type": "string"}
+        }
+      },
+      "UpdateReservationRequest": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "status": {"type": "string","enum":["PENDING","CONFIRMED","CANCELLED"]}
+        },
+        "required": ["id","status"]
+      }
+    }
+  },
+  "paths": {
+    "/api/check-availability": {
+      "get": {
+        "summary": "Check available seats for a route and date",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "description": "Date of travel (format: YYYY-MM-DD)",
+            "schema": {"type": "string","format":"date","example":"YYYY-MM-DD"}
+          },
+          {
+            "name": "origin",
+            "in": "query",
+            "required": true,
+            "description": "Origin stop (A, B, C, D)",
+            "schema": {"type": "string","enum":["A","B","C","D"]}
+          },
+          {
+            "name": "destination",
+            "in": "query",
+            "required": true,
+            "description": "Destination stop (A, B, C, D)",
+            "schema": {"type": "string","enum":["A","B","C","D"]}
+          },
+          {
+            "name": "passengerCount",
+            "in": "query",
+            "required": true,
+            "description": "Number of passengers (integer ≥ 1)",
+            "schema": {"type":"integer","minimum":1}
+          }
+        ],
+        "responses": {
+          "200": {"description":"Available seats retrieved","content":{"application/json":{"schema":{"$ref":"#/components/schemas/AvailabilityResponse"}}}},
+          "400": {"description":"Invalid request parameters"}
+        }
+      }
+    },
+    "/api/reserve": {
+      "post": {
+        "summary": "Reserve seats for a given route and date",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "date": {"type": "string","format":"date","example":"YYYY-MM-DD","description":"Date of travel"},
+                  "origin": {"type": "string","enum":["A","B","C","D"]},
+                  "destination": {"type": "string","enum":["A","B","C","D"]},
+                  "seatIds": {
+                    "type": "string",
+                    "description": "Comma-separated seat IDs, e.g., 1A,1B"
+                  }
+                },
+                "required": ["date","origin","destination","seatIds"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description":"Reservation successful","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ReservationResponse"}}}},
+          "400": {"description":"Invalid request or seats already booked"},
+          "500": {"description":"Reservation failed due to server error"}
+        }
+      }
+    },
+    "/api/seats": {
+      "get": {
+        "summary": "Get all seats",
+        "responses": {
+          "200": {"description":"List of all seats","content":{"application/json":{"schema":{"type":"array","items":{"type":"string"}}}}}
+        }
+      },
+      "post": {
+        "summary": "Add a new seat",
+        "requestBody": {
+          "required": true,
+          "content": {"application/json":{"schema":{"$ref":"#/components/schemas/SeatRequest"}}}
+        },
+        "responses": {
+          "200": {"description":"Seat added successfully"},
+          "400": {"description":"Invalid seat or JSON"}
+        }
+      }
+    },
+    "/api/reservation/update": {
+      "post": {
+        "summary": "Update reservation status",
+        "requestBody": {
+          "required": true,
+          "content": {"application/json":{"schema":{"$ref":"#/components/schemas/UpdateReservationRequest"}}}
+        },
+        "responses": {
+          "200": {"description":"Reservation updated successfully"},
+          "400": {"description":"Invalid reservation status or missing fields"}
+        }
+      }
+    }
+  }
+}

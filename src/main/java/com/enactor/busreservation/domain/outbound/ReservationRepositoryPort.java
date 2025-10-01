@@ -1,5 +1,6 @@
 package com.enactor.busreservation.domain.outbound;
 
+import com.enactor.busreservation.domain.model.JourneyDirection;
 import com.enactor.busreservation.domain.model.Reservation;
 import com.enactor.busreservation.domain.model.ReservationStatus;
 import com.enactor.busreservation.domain.model.Seat;
@@ -8,7 +9,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface ReservationRepositoryPort {
-    List<Seat> findAvailableSeats(LocalDate date, String origin, String destination);
+    List<Seat> findAvailableSeats(LocalDate date, String origin, String destination, JourneyDirection direction);
 
     void save(Reservation reservation, int pricePerSeat);
 

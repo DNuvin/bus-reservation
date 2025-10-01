@@ -49,7 +49,7 @@ public class CheckAvailabilityServlet extends HttpServlet {
 
             int passengerCount = Integer.parseInt(req.getParameter("passengerCount"));
 
-            List<Seat> availableSeats = service.checkAvailability(date, origin, destination);
+            List<Seat> availableSeats = service.checkAvailability(date, origin, destination, passengerCount);
             int pricePerSeat = service.calculatePricePerSeat(origin, destination);
             int totalPrice = passengerCount * pricePerSeat;
 

@@ -1,5 +1,6 @@
 package com.enactor.busreservation.application.service;
 
+import com.enactor.busreservation.domain.model.JourneyDirection;
 import com.enactor.busreservation.domain.model.Reservation;
 import com.enactor.busreservation.domain.model.ReservationStatus;
 import com.enactor.busreservation.domain.model.Seat;
@@ -23,10 +24,22 @@ public class ReservationServiceImpl implements ReservationServiceInterface {
     }
 
     @Override
-    public List<Seat> checkAvailability(LocalDate date, String origin, String destination) {
+    public List<Seat> checkAvailability(LocalDate date, String origin, String destination, int passengerCount) {
         log.info("Checking availability for route {} → {} on {}", origin, destination, date);
-        List<Seat> available = repository.findAvailableSeats(date, origin, destination);
+        JourneyDirection direction = getDirection(origin, destination);
+
+        List<Seat> available = repository.findAvailableSeats(date, origin, destination, direction);
         log.info("Available seats: {}", available.stream().map(Seat::getSeatId).toList());
+
+        if (available.size() < passengerCount) {
+            String msg = String.format(
+                    "Not enough seats available for %d passengers. Only %d seat(s) available.",
+                    passengerCount, available.size()
+            );
+            log.warn(msg);
+            throw new IllegalArgumentException(msg); // changed to IllegalArgumentException
+        }
+
         return available;
     }
 
@@ -34,23 +47,36 @@ public class ReservationServiceImpl implements ReservationServiceInterface {
     public Reservation reserveSeats(LocalDate date, String origin, String destination, List<String> seatIds) {
         synchronized (this) {
             log.info("Attempting to reserve seats {} from {} → {} on {}", seatIds, origin, destination, date);
-            List<Seat> available = checkAvailability(date, origin, destination);
+
+            int passengerCount = seatIds.size();
+            List<Seat> available = checkAvailability(date, origin, destination, passengerCount);
 
             List<Seat> seatsToReserve = new ArrayList<>();
+            List<String> alreadyBooked = new ArrayList<>();
+
             for (String id : seatIds) {
                 Seat seat = available.stream()
                         .filter(s -> s.getSeatId().equals(id))
                         .findFirst()
-                        .orElseThrow(() -> {
-                            log.warn("Seat {} already booked", id);
-                            return new RuntimeException("Seat " + id + " already booked");
-                        });
-                seat.setReserved(true);
-                seatsToReserve.add(seat);
+                        .orElse(null);
+
+                if (seat == null) {
+                    alreadyBooked.add(id); // collect all unavailable seats
+                } else {
+                    seat.setReserved(true);
+                    seatsToReserve.add(seat);
+                }
+            }
+
+            if (!alreadyBooked.isEmpty()) {
+                String msg = "Seats already booked: " + String.join(", ", alreadyBooked);
+                log.warn(msg);
+                throw new RuntimeException(msg); // throw with all reserved seats
             }
 
             int pricePerSeat = calculatePricePerSeat(origin, destination);
             int totalPrice = seatsToReserve.size() * pricePerSeat;
+            JourneyDirection direction = getDirection(origin, destination);
 
             Reservation reservation = new Reservation(
                     "R-" + System.currentTimeMillis(),
@@ -59,7 +85,8 @@ public class ReservationServiceImpl implements ReservationServiceInterface {
                     destination,
                     seatsToReserve,
                     totalPrice,
-                    ReservationStatus.HELD
+                    ReservationStatus.HELD,
+                    direction
             );
 
             repository.save(reservation, pricePerSeat);
@@ -69,6 +96,7 @@ public class ReservationServiceImpl implements ReservationServiceInterface {
             return reservation;
         }
     }
+
 
     @Override
     public void updateReservationStatus(String reservationId, ReservationStatus status) {
@@ -107,4 +135,28 @@ public class ReservationServiceImpl implements ReservationServiceInterface {
         log.error("Invalid route requested: {} → {}", origin, destination);
         throw new IllegalArgumentException("Invalid route: " + origin + " → " + destination);
     }
+
+    private JourneyDirection getDirection(String origin, String destination) {
+        origin = origin.toUpperCase();
+        destination = destination.toUpperCase();
+
+        // OUTBOUND: start from A
+        if (origin.equals("A") && (destination.equals("B") || destination.equals("C") || destination.equals("D")) ||
+                origin.equals("B") && destination.equals("C") ||
+                origin.equals("B") && destination.equals("D") ||
+                origin.equals("C") && destination.equals("D")) {
+            return JourneyDirection.OUTBOUND;
+        }
+        // RETURN: start from D
+        else if (origin.equals("D") && (destination.equals("C") || destination.equals("B") || destination.equals("A")) ||
+                origin.equals("C") && destination.equals("B") ||
+                origin.equals("C") && destination.equals("A") ||
+                origin.equals("B") && destination.equals("A")) {
+            return JourneyDirection.RETURN;
+        } else {
+            throw new IllegalArgumentException("Invalid route: " + origin + " → " + destination);
+        }
+    }
+
+
 }

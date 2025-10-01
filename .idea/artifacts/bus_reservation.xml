@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jpackage" name="bus-reservation">
+    <output-path>$PROJECT_DIR$/out/artifacts/bus_reservation</output-path>
+    <root id="root">
+      <element id="archive" name="bus_reservation.jar">
+        <element id="module-output" name="bus-reservation" />
+      </element>
+    </root>
+  </artifact>
+</component>

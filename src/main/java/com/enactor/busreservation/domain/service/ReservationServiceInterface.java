@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface ReservationServiceInterface {
-    List<Seat> checkAvailability(LocalDate date, String origin, String destination);
+    List<Seat> checkAvailability(LocalDate date, String origin, String destination, int passengerCount);
 
     Reservation reserveSeats(LocalDate date, String origin, String destination, List<String> seatIds);
 

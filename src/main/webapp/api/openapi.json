@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Bus Reservation API",
-    "version": "1.0",
+    "version": "1.1",
     "description": "API for managing bus reservations including seat availability, booking, updates, and seat management."
   },
   "servers": [
@@ -74,7 +74,7 @@
             "in": "query",
             "required": true,
             "description": "Date of travel (format: YYYY-MM-DD)",
-            "schema": {"type": "string","format":"date","example":"YYYY-MM-DD"}
+            "schema": {"type": "string","format":"date","example":"2025-10-05"}
           },
           {
             "name": "origin",
@@ -99,8 +99,14 @@
           }
         ],
         "responses": {
-          "200": {"description":"Available seats retrieved","content":{"application/json":{"schema":{"$ref":"#/components/schemas/AvailabilityResponse"}}}},
-          "400": {"description":"Invalid request parameters"}
+          "200": {
+            "description":"Available seats retrieved",
+            "content":{"application/json":{"schema":{"$ref":"#/components/schemas/AvailabilityResponse"}}}
+          },
+          "400": {
+            "description":"Invalid request or not enough seats",
+            "content":{"application/json":{"schema":{"$ref":"#/components/schemas/AvailabilityResponse"}}}
+          }
         }
       }
     },
@@ -114,13 +120,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "date": {"type": "string","format":"date","example":"YYYY-MM-DD","description":"Date of travel"},
+                  "date": {"type": "string","format":"date","example":"2025-10-05"},
                   "origin": {"type": "string","enum":["A","B","C","D"]},
                   "destination": {"type": "string","enum":["A","B","C","D"]},
-                  "seatIds": {
-                    "type": "string",
-                    "description": "Comma-separated seat IDs, e.g., 1A,1B"
-                  }
+                  "seatIds": {"type": "string","description":"Comma-separated seat IDs, e.g., 1A,1B"}
                 },
                 "required": ["date","origin","destination","seatIds"]
               }
@@ -128,9 +131,18 @@
           }
         },
         "responses": {
-          "200": {"description":"Reservation successful","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ReservationResponse"}}}},
-          "400": {"description":"Invalid request or seats already booked"},
-          "500": {"description":"Reservation failed due to server error"}
+          "200": {
+            "description":"Reservation successful",
+            "content":{"application/json":{"schema":{"$ref":"#/components/schemas/ReservationResponse"}}}
+          },
+          "400": {
+            "description":"Invalid request or seats already booked",
+            "content":{"application/json":{"schema":{"$ref":"#/components/schemas/ReservationResponse"}}}
+          },
+          "500": {
+            "description":"Reservation failed due to server error",
+            "content":{"application/json":{"schema":{"$ref":"#/components/schemas/ReservationResponse"}}}
+          }
         }
       }
     },
@@ -138,7 +150,10 @@
       "get": {
         "summary": "Get all seats",
         "responses": {
-          "200": {"description":"List of all seats","content":{"application/json":{"schema":{"type":"array","items":{"type":"string"}}}}}
+          "200": {
+            "description":"List of all seats",
+            "content":{"application/json":{"schema":{"type":"array","items":{"type":"string"}}}}
+          }
         }
       },
       "post": {

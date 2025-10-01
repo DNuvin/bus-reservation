@@ -15,10 +15,12 @@ public class Reservation {
     private ReservationStatus status;
     private final List<Seat> seats;
 
+    private JourneyDirection direction;  // Add this field
+
     public Reservation(String reservationId, LocalDate travelDate,
                        String origin, String destination,
                        List<Seat> seats, int totalPrice,
-                       ReservationStatus status) {
+                       ReservationStatus status, JourneyDirection direction) {
 
         this.reservationId = reservationId;
         this.travelDate = travelDate;
@@ -31,6 +33,7 @@ public class Reservation {
                 .reduce((a, b) -> a + "," + b).orElse("");
         this.totalPrice = totalPrice;
         this.status = status;
+        this.direction = direction;
     }
 
     public String getReservationId() { return reservationId; }
@@ -42,5 +45,7 @@ public class Reservation {
     public int getTotalPrice() { return totalPrice; }
     public ReservationStatus getStatus() { return status; }
     public void setStatus(ReservationStatus status) { this.status = status; }
+    public JourneyDirection getDirection() {return direction;}
+    public void setDirection(JourneyDirection direction) {this.direction = direction;}
     public List<Seat> getSeats() { return seats; }
 }

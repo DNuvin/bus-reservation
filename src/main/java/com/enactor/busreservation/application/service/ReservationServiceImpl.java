@@ -63,7 +63,6 @@ public class ReservationServiceImpl implements ReservationServiceInterface {
                 if (seat == null) {
                     alreadyBooked.add(id); // collect all unavailable seats
                 } else {
-                    seat.setReserved(true);
                     seatsToReserve.add(seat);
                 }
             }
@@ -115,7 +114,7 @@ public class ReservationServiceImpl implements ReservationServiceInterface {
     @Override
     public void addSeat(String seatId) {
         log.info("Adding new seat: {}", seatId);
-        repository.addSeat(new Seat(seatId, false));
+        repository.addSeat(new Seat(seatId));
     }
 
     @Override

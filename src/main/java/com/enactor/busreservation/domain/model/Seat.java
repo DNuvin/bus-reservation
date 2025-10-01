@@ -4,16 +4,14 @@ import java.util.Objects;
 
 public class Seat {
     private final String seatId;
-    private boolean reserved;
 
-    public Seat(String seatId, boolean reserved) {
+
+    public Seat(String seatId) {
         this.seatId = seatId;
-        this.reserved = reserved;
     }
 
     public String getSeatId() { return seatId; }
-    public boolean isReserved() { return reserved; }
-    public void setReserved(boolean reserved) { this.reserved = reserved; }
+
 
     @Override
     public boolean equals(Object o) {

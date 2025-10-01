@@ -1,5 +1,6 @@
-package com.enactor.busreservation.adapter.out.persistence.jdbc;
+package com.enactor.busreservation.adapter;
 
+import com.enactor.busreservation.adapter.out.persistence.jdbc.ReservationJdbcRepository;
 import com.enactor.busreservation.domain.model.*;
 import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.*;
@@ -28,8 +29,7 @@ class ReservationJdbcRepositoryTest {
 
             stmt.execute("""
                 CREATE TABLE seats (
-                    seat_id VARCHAR(10) PRIMARY KEY,
-                    reserved BOOLEAN
+                    seat_id VARCHAR(10) PRIMARY KEY
                 )
             """);
 
@@ -70,24 +70,25 @@ class ReservationJdbcRepositoryTest {
             stmt.execute("DELETE FROM reservations");
             stmt.execute("DELETE FROM seats");
 
-            stmt.execute("INSERT INTO seats(seat_id, reserved) VALUES('S1', FALSE)");
-            stmt.execute("INSERT INTO seats(seat_id, reserved) VALUES('S2', FALSE)");
-            stmt.execute("INSERT INTO seats(seat_id, reserved) VALUES('S3', FALSE)");
+            stmt.execute("INSERT INTO seats(seat_id) VALUES('S1')");
+            stmt.execute("INSERT INTO seats(seat_id) VALUES('S2')");
+            stmt.execute("INSERT INTO seats(seat_id) VALUES('S3')");
         }
     }
 
     @Test
     void testAddSeatAndFindAllSeats() {
-        repository.addSeat(new Seat("S4", false));
+        repository.addSeat(new Seat("S4"));
         List<Seat> seats = repository.findAllSeats();
         assertEquals(4, seats.size());
+        assertTrue(seats.stream().anyMatch(s -> s.getSeatId().equals("S4")));
     }
 
     @Test
     void testSaveAndFindById() {
         LocalDate date = LocalDate.now();
-        Seat seat1 = new Seat("S1", false);
-        Seat seat2 = new Seat("S2", false);
+        Seat seat1 = new Seat("S1");
+        Seat seat2 = new Seat("S2");
         Reservation reservation = new Reservation("R1", date, "A", "B",
                 List.of(seat1, seat2), 100, ReservationStatus.HELD, JourneyDirection.OUTBOUND);
 
@@ -99,22 +100,18 @@ class ReservationJdbcRepositoryTest {
         assertEquals(ReservationStatus.HELD, fetched.getStatus());
 
         List<Seat> allSeats = repository.findAllSeats();
-        for (Seat s : allSeats) {
-            if (s.getSeatId().equals("S1") || s.getSeatId().equals("S2")) {
-                assertTrue(s.isReserved());
-            }
-        }
+        assertEquals(3, allSeats.size()); // total seats in DB
     }
 
     @Test
     void testFindAvailableSeats() {
         LocalDate date = LocalDate.now();
         Reservation reservation = new Reservation("R2", date, "A", "B",
-                List.of(new Seat("S1", false)), 50, ReservationStatus.HELD, JourneyDirection.OUTBOUND);
+                List.of(new Seat("S1")), 50, ReservationStatus.HELD, JourneyDirection.OUTBOUND);
         repository.save(reservation, 50);
 
         List<Seat> available = repository.findAvailableSeats(date, "A", "B", JourneyDirection.OUTBOUND);
-        assertEquals(2, available.size());
+        assertEquals(2, available.size()); // S2, S3 should be available
         assertTrue(available.stream().anyMatch(s -> s.getSeatId().equals("S2")));
         assertTrue(available.stream().anyMatch(s -> s.getSeatId().equals("S3")));
     }
@@ -123,7 +120,7 @@ class ReservationJdbcRepositoryTest {
     void testFindBookedSeats() {
         LocalDate date = LocalDate.now();
         Reservation reservation = new Reservation("R3", date, "A", "C",
-                List.of(new Seat("S2", false)), 50, ReservationStatus.HELD, JourneyDirection.OUTBOUND);
+                List.of(new Seat("S2")), 50, ReservationStatus.HELD, JourneyDirection.OUTBOUND);
         repository.save(reservation, 50);
 
         List<Seat> booked = repository.findBookedSeats(date, "A", "C");
@@ -135,7 +132,7 @@ class ReservationJdbcRepositoryTest {
     void testUpdateReservationStatus() {
         LocalDate date = LocalDate.now();
         Reservation reservation = new Reservation("R4", date, "B", "C",
-                List.of(new Seat("S3", false)), 50, ReservationStatus.HELD, JourneyDirection.OUTBOUND);
+                List.of(new Seat("S3")), 50, ReservationStatus.HELD, JourneyDirection.OUTBOUND);
         repository.save(reservation, 50);
 
         repository.updateReservationStatus("R4", ReservationStatus.CONFIRMED);

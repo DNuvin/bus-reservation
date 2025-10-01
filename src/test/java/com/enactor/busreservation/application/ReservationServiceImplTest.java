@@ -42,12 +42,12 @@ class ReservationServiceImplTest {
     @Test
     void testAddSeat_CallsRepository() {
         service.addSeat("S1");
-        verify(repository, times(1)).addSeat(argThat(seat -> seat.getSeatId().equals("S1") && !seat.isReserved()));
+        verify(repository, times(1)).addSeat(argThat(seat -> seat.getSeatId().equals("S1")));
     }
 
     @Test
     void testGetAllSeats_CallsRepository() {
-        List<Seat> seats = Arrays.asList(new Seat("S1", false), new Seat("S2", true));
+        List<Seat> seats = Arrays.asList(new Seat("S1"), new Seat("S2"));
         when(repository.findAllSeats()).thenReturn(seats);
 
         List<Seat> result = service.getAllSeats();
@@ -65,7 +65,7 @@ class ReservationServiceImplTest {
     @Test
     void testCheckAvailability_SufficientSeats() {
         LocalDate date = LocalDate.now();
-        List<Seat> seats = Arrays.asList(new Seat("S1", false), new Seat("S2", false));
+        List<Seat> seats = Arrays.asList(new Seat("S1"), new Seat("S2"));
         when(repository.findAvailableSeats(date, "A", "B", JourneyDirection.OUTBOUND)).thenReturn(seats);
 
         List<Seat> available = service.checkAvailability(date, "A", "B", 2);
@@ -75,7 +75,7 @@ class ReservationServiceImplTest {
     @Test
     void testCheckAvailability_NotEnoughSeats() {
         LocalDate date = LocalDate.now();
-        List<Seat> seats = Arrays.asList(new Seat("S1", false));
+        List<Seat> seats = Arrays.asList(new Seat("S1"));
         when(repository.findAvailableSeats(date, "A", "B", JourneyDirection.OUTBOUND)).thenReturn(seats);
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
@@ -86,8 +86,8 @@ class ReservationServiceImplTest {
     @Test
     void testReserveSeats_Success() {
         LocalDate date = LocalDate.now();
-        Seat s1 = new Seat("S1", false);
-        Seat s2 = new Seat("S2", false);
+        Seat s1 = new Seat("S1");
+        Seat s2 = new Seat("S2");
         List<Seat> availableSeats = Arrays.asList(s1, s2);
         when(repository.findAvailableSeats(date, "A", "B", JourneyDirection.OUTBOUND)).thenReturn(availableSeats);
 
@@ -105,7 +105,7 @@ class ReservationServiceImplTest {
     @Test
     void testReserveSeats_SeatAlreadyBooked() {
         LocalDate date = LocalDate.now();
-        List<Seat> availableSeats = Arrays.asList(new Seat("S1", false));
+        List<Seat> availableSeats = Arrays.asList(new Seat("S1"));
         when(repository.findAvailableSeats(date, "A", "B", JourneyDirection.OUTBOUND)).thenReturn(availableSeats);
 
         RuntimeException ex = assertThrows(RuntimeException.class,
@@ -118,7 +118,7 @@ class ReservationServiceImplTest {
     @Test
     void testGetDirection_Outbound() {
         LocalDate date = LocalDate.now();
-        Seat s1 = new Seat("S1", false);
+        Seat s1 = new Seat("S1");
 
         // Mock repository to return available seat
         when(repository.findAvailableSeats(date, "A", "B", JourneyDirection.OUTBOUND))
@@ -133,7 +133,7 @@ class ReservationServiceImplTest {
     @Test
     void testGetDirection_Return() {
         Reservation reservation = new Reservation("R1", LocalDate.now(), "D", "B",
-                List.of(new Seat("S1", false)), 50, ReservationStatus.HELD, JourneyDirection.RETURN);
+                List.of(new Seat("S1")), 50, ReservationStatus.HELD, JourneyDirection.RETURN);
         assertEquals(JourneyDirection.RETURN, reservation.getDirection());
     }
 }

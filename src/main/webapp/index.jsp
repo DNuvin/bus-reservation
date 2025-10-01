@@ -18,7 +18,7 @@
             text-align: center;
         }
         main {
-            max-width: 800px;
+            max-width: 900px;
             margin: 30px auto;
             padding: 20px;
             background-color: white;
@@ -33,59 +33,90 @@
             padding: 0;
         }
         li {
-            background: #e8f5e9;
             margin: 10px 0;
-            padding: 15px;
-            border-radius: 5px;
+            padding: 10px;
         }
-        code {
-            background: #f0f0f0;
-            padding: 2px 6px;
-            border-radius: 3px;
-            color: #d6336c;
+        a.swagger-link {
+            display: inline-block;
+            margin: 15px 0;
+            color: white;
+            background-color: #4CAF50;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+        a.swagger-link:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
 <body>
     <header>
         <h1>Bus Reservation Service</h1>
-        <p>Your simple API to check availability, reserve seats, manage seats, and update reservations</p>
+        <p>Simple Servlet-based system for bus reservations</p>
     </header>
     <main>
-        <h2>Available Endpoints</h2>
+        <a class="swagger-link" href="http://localhost:8080/bus-reservation/swagger-ui" target="_blank">
+            Open Swagger UI
+        </a>
+
+        <h2>Assumptions and Requirements</h2>
         <ul>
-            <li>
-                <strong>Check Availability:</strong><br>
-                GET <code>/bus-reservation/api/availability?date=YYYY-MM-DD&origin=A&destination=D</code>
+            <li><strong>Bus Route and Schedule:</strong> Single round-trip per day
+                <ul>
+                    <li>Outbound: A → D (stops at B and C)</li>
+                    <li>Return: D → A (stops at C and B)</li>
+                </ul>
             </li>
-            <li>
-                <strong>Reserve Seats:</strong><br>
-                POST <code>/bus-reservation/api/reserve</code><br>
-                JSON body example:
-                <pre>
-{
-  "date": "2025-09-28",
-  "origin": "A",
-  "destination": "D",
-  "seats": ["S1", "S2"]
-}
-                </pre>
+            <li><strong>Seats and Layout:</strong>
+                <ul>
+                    <li>40 seats arranged in 10 rows × 4 seats per row (1A, 1B, …, 10D)</li>
+                    <li>Each seat is unique and can be booked only once per direction per date</li>
+                </ul>
             </li>
-            <li>
-                <strong>Manage Seats:</strong><br>
-                GET <code>/bus-reservation/api/seats</code> - List all seats<br>
-                POST <code>/bus-reservation/api/seats</code> - Add a seat (JSON body: <code>{"seatId": "S1"}</code>)
+            <li><strong>Direction Handling:</strong>
+                <ul>
+                    <li>Two journey directions: OUTBOUND (A → D), RETURN (D → A)</li>
+                    <li>Seat bookings are direction-specific</li>
+                    <li>`JourneyDirection` enum is used in code</li>
+                </ul>
             </li>
-            <li>
-                <strong>Update Reservation:</strong><br>
-                POST <code>/bus-reservation/api/reservation/update</code><br>
-                JSON body example:
-                <pre>
-{
-  "id": "RES123",
-  "status": "COMPLETED"
-}
-                </pre>
+            <li><strong>Seat Reservation Rules:</strong>
+                <ul>
+                    <li>Seats can be booked only if completely free for requested date and direction</li>
+                    <li>Partial segment bookings block the seat for the entire direction</li>
+                    <li>Seat availability checks return only fully free seats</li>
+                    <li>Reservations are atomic: if any seat is unavailable, the entire request fails</li>
+                </ul>
+            </li>
+            <li><strong>Pricing:</strong>
+                <ul>
+                    <li>A → B: Rs. 50</li>
+                    <li>A → C: Rs. 100</li>
+                    <li>A → D: Rs. 150</li>
+                    <li>B → C: Rs. 50</li>
+                    <li>B → D: Rs. 100</li>
+                    <li>C → D: Rs. 50</li>
+                    <li>Return journeys follow same pricing rules</li>
+                    <li>Total price = price per seat × number of seats</li>
+                </ul>
+            </li>
+            <li><strong>Reservation Handling:</strong>
+                <ul>
+                    <li>Reservations reserve only available seats</li>
+                    <li>Requested seats already booked are excluded</li>
+                    <li>Synchronized blocks prevent race conditions during simultaneous reservations</li>
+                    <li>Queue processor handles async requests with callbacks</li>
+                    <li>Status field tracks reservation state: HELD, CONFIRMED, CANCELLED</li>
+                </ul>
+            </li>
+            <li><strong>Simplifications:</strong>
+                <ul>
+                    <li>No partial refunds or cancellations</li>
+                    <li>Seat selection is first-come-first-serve</li>
+                    <li>No external frameworks; only servlets</li>
+                    <li>All operations handle transactional integrity with Serializable isolation</li>
+                </ul>
             </li>
         </ul>
     </main>

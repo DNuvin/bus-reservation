@@ -62,15 +62,6 @@ public class ReservationJdbcRepository implements ReservationRepositoryPort {
             }
 
 
-            // Mark seats reserved
-            String updateSeat = "UPDATE seats SET reserved = TRUE WHERE seat_id = ?";
-            try (PreparedStatement ps = conn.prepareStatement(updateSeat)) {
-                for (Seat seat : reservation.getSeats()) {
-                    ps.setString(1, seat.getSeatId());
-                    ps.executeUpdate();
-                }
-            }
-
             conn.commit();
         } catch (SQLException e) {
             throw new RuntimeException("Error saving reservation", e);
@@ -96,7 +87,7 @@ public class ReservationJdbcRepository implements ReservationRepositoryPort {
                 // Fetch reserved seats
                 List<Seat> seats = new ArrayList<>();
                 String seatQuery = """
-                            SELECT s.seat_id, s.reserved
+                            SELECT s.seat_id
                             FROM seats s
                             JOIN reservation_seats rs ON s.seat_id = rs.seat_id
                             WHERE rs.reservation_id = ?
@@ -106,8 +97,7 @@ public class ReservationJdbcRepository implements ReservationRepositoryPort {
                     ResultSet seatRS = ps2.executeQuery();
                     while (seatRS.next()) {
                         seats.add(new Seat(
-                                seatRS.getString("seat_id"),
-                                seatRS.getBoolean("reserved")
+                                seatRS.getString("seat_id")
                         ));
                     }
                 }
@@ -124,11 +114,10 @@ public class ReservationJdbcRepository implements ReservationRepositoryPort {
         List<Seat> allSeats = new ArrayList<>();
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT seat_id, reserved FROM seats")) {
+             ResultSet rs = stmt.executeQuery("SELECT seat_id FROM seats")) {
             while (rs.next()) {
                 allSeats.add(new Seat(
-                        rs.getString("seat_id"),
-                        rs.getBoolean("reserved")
+                        rs.getString("seat_id")
                 ));
             }
         } catch (SQLException e) {
@@ -140,10 +129,9 @@ public class ReservationJdbcRepository implements ReservationRepositoryPort {
     @Override
     public void addSeat(Seat seat) {
         try (Connection conn = dataSource.getConnection()) {
-            String insert = "INSERT INTO seats (seat_id, reserved) VALUES (?, ?)";
+            String insert = "INSERT INTO seats (seat_id) VALUES (?)";
             try (PreparedStatement ps = conn.prepareStatement(insert)) {
                 ps.setString(1, seat.getSeatId());
-                ps.setBoolean(2, seat.isReserved());
                 ps.executeUpdate();
             }
         } catch (SQLException e) {
@@ -155,7 +143,7 @@ public class ReservationJdbcRepository implements ReservationRepositoryPort {
     public List<Seat> findBookedSeats(LocalDate date, String origin, String destination) {
         List<Seat> booked = new ArrayList<>();
         String query = """
-                    SELECT s.seat_id, s.reserved 
+                    SELECT s.seat_id
                     FROM seats s
                     JOIN reservation_seats rs ON s.seat_id = rs.seat_id
                     JOIN reservations r ON rs.reservation_id = r.id
@@ -173,8 +161,7 @@ public class ReservationJdbcRepository implements ReservationRepositoryPort {
                 ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
                     booked.add(new Seat(
-                            rs.getString("seat_id"),
-                            rs.getBoolean("reserved")
+                            rs.getString("seat_id")
                     ));
                 }
             }
@@ -212,8 +199,7 @@ public class ReservationJdbcRepository implements ReservationRepositoryPort {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 availableSeats.add(new Seat(
-                        rs.getString("seat_id"),
-                        rs.getBoolean("reserved")
+                        rs.getString("seat_id")
                 ));
             }
         } catch (SQLException e) {
